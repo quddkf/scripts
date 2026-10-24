@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        에리의 크랙 로어 인젝터 (Universal) [AppCheck]
+// @name        에리의 크랙 로어 인젝터 (Universal)
 // @namespace   에리의 크랙 로어 인젝터
 // @version     1.4.0.260706-universal.35-appcheck
 // @updateURL   https://raw.githubusercontent.com/quddkf/scripts/main/erie-lore-injector.user.js

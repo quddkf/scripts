@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         🪽 Wish RP Manager Core [AppCheck]
+// @name         🪽 Wish RP Manager Core
 // @namespace    local.rp.context.manager
 // @version      2.0.5-appcheck2
 // @updateURL   https://raw.githubusercontent.com/quddkf/scripts/main/wish-rp-manager-core.user.js
