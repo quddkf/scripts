@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽 Wish RP Manager Core
 // @namespace    local.rp.context.manager
-// @version      2.0.5-appcheck2
+// @version      2.0.5.1
 // @updateURL   https://raw.githubusercontent.com/quddkf/scripts/main/wish-rp-manager-core.user.js
 // @downloadURL https://raw.githubusercontent.com/quddkf/scripts/main/wish-rp-manager-core.user.js
 // @description  Crack RP용 컨텍스트 주입·인지·자동 장기기억·자료집·전체 재구축을 하나로 관리합니다.

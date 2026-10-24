@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        에리의 크랙 로어 인젝터 (Universal)
 // @namespace   에리의 크랙 로어 인젝터
-// @version     1.4.0.260706-universal.35-appcheck
+// @version     1.4.0.260706-universal.35.1
 // @updateURL   https://raw.githubusercontent.com/quddkf/scripts/main/erie-lore-injector.user.js
 // @downloadURL https://raw.githubusercontent.com/quddkf/scripts/main/erie-lore-injector.user.js
 // @description 에리를 죽인 크랙을 때린다. 261017 hotfix
