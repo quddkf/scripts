@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         크랙 답변 합치기
 // @namespace    local.crack.answer-merge
-// @version      1.0.4
+// @version      1.0.5
 // @updateURL    https://raw.githubusercontent.com/quddkf/scripts/main/crack-answer-merge.user.js
 // @downloadURL  https://raw.githubusercontent.com/quddkf/scripts/main/crack-answer-merge.user.js
 // @description  이어진 AI 답변 사이의 + 버튼 · 연결 지점 표시 · 서버 저장 확인 후 합치기
@@ -15,15 +15,32 @@
 
     const PREFIX = 'crack-answer-merge:v1:';
     const GENERATING = new Set(['generating', 'streaming', 'pending', 'processing']);
-    const joinText = (first, second) => first + '\n\n' + second;
+    // 1.0.5: 위시 RP Manager가 AI 답변 끝에 숨겨 두는 주입 블록(<!--RP_CONTEXT_MANAGER_START … END-->)을
+    // 본문 사이에 끼워 넣지 않아요. 앞 답변의 블록은 빼고, 마지막 답변 끝의 블록만 합친 답변 끝에 그대로 둬요.
+    const RP_BLOCKS = [/\s*<!--RP_CONTEXT_MANAGER_START[\s\S]*?RP_CONTEXT_MANAGER_END-->/g, /\s*<rp_context_manager\b[\s\S]*?<\/rp_context_manager>/g];
+    const stripBlocks = text => RP_BLOCKS.reduce((t, re) => t.replace(re, ''), String(text || '')).replace(/\s+$/, '');
+    function splitCarrier(text) {
+        const src = String(text || '');
+        let best = null;
+        for (const [a, b] of [['<!--RP_CONTEXT_MANAGER_START', 'RP_CONTEXT_MANAGER_END-->'], ['<rp_context_manager', '</rp_context_manager>']]) {
+            const start = src.lastIndexOf(a); if (start < 0) continue;
+            const end = src.indexOf(b, start); if (end < 0) continue;
+            if (!best || start > best.start) best = { start, stop: end + b.length };
+        }
+        if (!best || src.slice(best.stop).trim()) return { body: stripBlocks(src), suffix: '' };
+        const body = src.slice(0, best.start).replace(/\s+$/, '');
+        return { body: stripBlocks(body), suffix: src.slice(body.length) };
+    }
+    const joinText = (first, second) => stripBlocks(first) + '\n\n' + splitCarrier(second).body;
     const answer = row => row && row.role === 'assistant' && row.variants === 1 && !GENERATING.has(row.status);
 
     function boundaryFor(job) {
         if (Object.hasOwn(job, 'boundary')) return Number.isInteger(job.boundary) && job.boundary >= 0 && job.boundary <= job.desired.length ? job.boundary : null;
         const first = job.originals[0].content, second = job.originals.at(-1).content;
-        if (job.desired === joinText(first, second)) return first.length + 2;
-        const at = second ? job.desired.indexOf(second) : -1;
-        return at >= 0 && job.desired.lastIndexOf(second) === at ? at : null;
+        if (job.desired === joinText(first, second)) return stripBlocks(first).length + 2;
+        const tail = splitCarrier(second).body;
+        const at = tail ? job.desired.indexOf(tail) : -1;
+        return at >= 0 && job.desired.lastIndexOf(tail) === at ? at : null;
     }
     function moveBoundary(before, after, offset) {
         if (offset === null || before === after) return offset;
@@ -363,9 +380,10 @@
             '앞 답변에 합쳐 저장한 뒤, 중복된 뒷 답변과 사이의 이어쓰기 명령을 지워요. 다른 대사는 유지돼요.' :
             '앞 답변에 합쳐 저장한 뒤, 중복된 뒷 답변만 지워요. 다른 대사는 유지돼요.';
         const preview = dialog.querySelector('textarea');
-        preview.value = job.desired;
-        previewValue = job.desired;
-        job.boundary = boundaryFor(job);
+        const shown = recovering ? stripBlocks(job.desired) : job.desired;
+        preview.value = shown;
+        previewValue = shown;
+        job.boundary = recovering ? null : boundaryFor(job);
         preview.disabled = recovering;
         showBoundary();
         dialog.querySelector('[data-save]').disabled = false;
@@ -413,7 +431,10 @@
         if (busy || preparing || !modalJob || modalJob.complete) return;
         const job = modalJob;
         const preview = dialog.querySelector('textarea');
-        if (!preview.disabled) job.desired = preview.value;
+        if (!preview.disabled) {
+            if (!preview.value.trim()) { status('합칠 내용을 비울 수 없어요.'); return; }
+            job.desired = stripBlocks(preview.value) + splitCarrier(job.originals.at(-1).content).suffix;
+        }
         if (!job.desired.trim()) { status('합칠 내용을 비울 수 없어요.'); return; }
         busy = true;
         preview.disabled = true;
