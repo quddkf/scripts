@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         크랙 답변 합치기
 // @namespace    local.crack.answer-merge
-// @version      1.0.5
+// @version      1.0.6
 // @updateURL    https://raw.githubusercontent.com/quddkf/scripts/main/crack-answer-merge.user.js
 // @downloadURL  https://raw.githubusercontent.com/quddkf/scripts/main/crack-answer-merge.user.js
 // @description  이어진 AI 답변 사이의 + 버튼 · 연결 지점 표시 · 서버 저장 확인 후 합치기
@@ -517,11 +517,11 @@
 #cam-dialog h2{font-size:18px;margin:0}
 #cam-dialog p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 #cam-dialog [data-status]{font-size:13px;color:var(--text_secondary,#ccc)}
-#cam-dialog textarea{box-sizing:border-box;width:100%;min-height:140px;height:43dvh;flex:1 1 auto;resize:vertical;padding:12px;border:1px solid var(--border_secondary,#666);border-radius:8px;background:var(--bg_base,#171717);color:inherit;font:14px/1.7 system-ui}
+#cam-dialog textarea{box-sizing:border-box;width:100%;min-height:140px;height:43dvh;flex:1 1 auto;resize:vertical;padding:12px;border:1px solid var(--border_secondary,#666);border-radius:8px;background:transparent;color:inherit;font:14px/1.7 system-ui}
 #cam-dialog textarea:disabled{opacity:1;-webkit-text-fill-color:currentColor}
 #cam-dialog .cam-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
 #cam-dialog .cam-actions span{flex:1}
-#cam-dialog button,#cam-recovery{border:1px solid var(--border_secondary,#666);border-radius:9px;padding:8px 12px;background:var(--bg_base,#262626);color:var(--text_primary,#eee);font:inherit;cursor:pointer}
+#cam-dialog button,#cam-recovery{border:1px solid var(--border_secondary,#666);border-radius:9px;padding:8px 12px;background:var(--bg_screen,#202020);color:var(--text_primary,#eee);font:inherit;cursor:pointer}
 #cam-dialog [data-save]{background:#d895b6;border-color:#d895b6;color:#25151e;font-weight:650}
 #cam-recovery{position:fixed;bottom:24px;left:84px;z-index:2147483000;font:13px system-ui}
 @media(max-width:480px){#cam-dialog{padding:16px}#cam-dialog .cam-actions{gap:7px}#cam-dialog .cam-actions span{display:none}#cam-recovery{left:12px;bottom:16px}}
