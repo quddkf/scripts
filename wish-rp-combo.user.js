@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽위시 RP Manager
 // @namespace    local.rp.context.manager
-// @version      0.17.30.1
+// @version      0.17.30.2
 // @description  장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -34495,7 +34495,11 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
     return {room:snapshot,longTermText,longTermCount};
   }
 
+  const COMBO_AUTOMATION_IGNORES_REFINER = true;
   function settledAutomaticTurns(turns, startIndex=0) {
+    // Combo 0.17.30.2: 위시처럼 자동 정리가 응답교정 검수 상태에 막히지 않게 합니다.
+    // (응답교정을 켜 두면 검수 전·주입/합치기로 원문이 바뀐 턴에서 자동 집계가 멈춰, 수동 '실행'만 되던 원인)
+    if(COMBO_AUTOMATION_IGNORES_REFINER)return turns;
     const refiner=window.__WISH_RP_MANAGER_REFINER__;
     if(!refiner?.canUseTurn)return turns;
     const stop=turns.findIndex((turn,index)=>index>=startIndex&&(turn.reviewSources?.length?turn.reviewSources:[{id:turn.key,content:turn.assistantText}]).some(source=>!refiner.canUseTurn(String(source.id),String(source.content||''),index===turns.length-1)));
@@ -34813,10 +34817,9 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
   function aiMemoryPolicyMatches(room,area,draft) {
     if(!room)return false;
     const config=aiMemoryConfig(room),row=config.areas[area];
-    return config.enabled&&row.enabled&&row.autoApply&&!aiMemoryManualWaiting(room,area)
-      &&draft.autoApplyEligible===true&&draft.applyRevision===row.applyRevision
-      &&draft.globalApplyRevision===config.applyRevision
-      &&draft.connectionStamp===JSON.stringify(aiFeatureSettings(loadAiSummarySettings(),area==='timeline'?'timeline':'summary'));
+    // Combo 0.17.30.2: 지금 자동 반영이 켜져 있으면 반영합니다. 초안을 만든 뒤 API·모델 설정을 바꾸거나
+    // 토글을 껐다 켰다는 이유로 검토 대기에 영영 남지 않게 합니다(위시 방식).
+    return config.enabled&&row.enabled&&row.autoApply&&!aiMemoryManualWaiting(room,area);
   }
   function aiMemoryAutoPermission(room,area,draft) {return !areaResetPaused(room)&&state.currentRoom===room&&aiMemoryPolicyMatches(room,area,draft); }
   function aiMemoryEditingNow() {
