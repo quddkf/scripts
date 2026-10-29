@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.16
+// @version      0.17.30.17
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -9143,8 +9143,22 @@ ${dialogueText}`;
     return room.personStateRecords;
   }
 
+  // 후추코어: AI가 마커 앞뒤에 설명·코드블록을 붙이거나 마커를 빠뜨려도 본문 JSON 줄을 읽어 냅니다.
+  function comboNormalizePersonOutput(text) {
+    let src = String(text || '').replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '').replace(/[\u201C\u201D]/g, '"');
+    const open = src.indexOf('[[WISH_PERSON_V1]]'), close = src.lastIndexOf('[[/WISH_PERSON_V1]]');
+    let body;
+    if (open >= 0 && close > open) body = src.slice(open + '[[WISH_PERSON_V1]]'.length, close);
+    else if (open >= 0) body = src.slice(open + '[[WISH_PERSON_V1]]'.length);
+    else body = src;
+    const lines = body.split('\n').map(line => line.trim()).filter(line => line && !/^```/.test(line))
+      .map(line => line.replace(/^[-*]\s+(?=\{)/, '').replace(/,\s*$/, ''))
+      .filter(line => line.startsWith('{') && line.endsWith('}'));
+    if (!lines.length) return String(text || '');
+    return ['[[WISH_PERSON_V1]]', ...lines, '[[/WISH_PERSON_V1]]'].join('\n');
+  }
   function parsePersonStateOutput(text) {
-    const src = String(text || '').replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '').trim();
+    const src = comboNormalizePersonOutput(text).replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '').trim();
     const lines = src.split('\n');
     const errors = [];
     if (lines[0]?.trim() !== '[[WISH_PERSON_V1]]' || lines.at(-1)?.trim() !== '[[/WISH_PERSON_V1]]') {
