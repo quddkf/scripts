@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.12
+// @version      0.17.30.13
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -20128,7 +20128,35 @@ ${dialogueText}`;
   }
 
   function restorePending(room, reason = 'manual') {
+    // 후추코어: 사용자가 직접 주입을 끄면 이 페이지에서는 자동으로 다시 켜지 않습니다(새로고침하면 다시 자동).
+    if (reason === 'manual' && room?.chatId) comboArm.suppressed.add(String(room.chatId));
     return queuePendingCarrierOperation(room, () => restorePendingNow(room, reason));
+  }
+
+  // 후추코어: 위시처럼 주입을 자동으로 켭니다. 방을 열었거나 새 AI 답변이 끝났는데 주입이 꺼져 있으면 알아서 시작합니다.
+  const comboArm = { suppressed:new Set(), last:new Map(), busy:false };
+  async function comboAutoArmTick(room) {
+    if (!room || room.pending || comboArm.busy || state.currentRoom !== room || room.comboAutoArm === false) return;
+    const id = String(room.chatId || '');
+    if (!id || comboArm.suppressed.has(id)) return;
+    if (state.autoSaveTimers?.has?.(id) || state.saveStatus === 'saving') return;
+    const now = Date.now(), last = comboArm.last.get(id);
+    if (last && now - last.at < 20000) return;
+    comboArm.busy = true;
+    let key = '';
+    try {
+      const recent = await fetchRecentMessages(apiChatIdOf(room), 3);
+      const newest = recent[0];
+      if (!newest || messageRoleOf(newest) !== 'assistant' || isIncompleteAiSourceMessage(newest)) { comboArm.last.set(id, { at:now, failedKey:last?.failedKey || '' }); return; }
+      key = String(messageIdOf(newest) || '');
+      if (last?.failedKey && last.failedKey === key) { comboArm.last.set(id, { at:now, failedKey:key }); return; }
+      if (state.currentRoom !== room || room.pending) return;
+      comboArm.last.set(id, { at:now, failedKey:'' });
+      await armInjection(room);
+    } catch (error) {
+      comboArm.last.set(id, { at:Date.now(), failedKey:key });
+      console.warn('[후추코어] 자동 주입 보류:', error?.message || error);
+    } finally { comboArm.busy = false; }
   }
 
   async function reanchorAfterResponseNow(room, latestAssistant, options = {}) {
@@ -37872,7 +37900,7 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
     }
     // 연결되어 있어도 상단이 숨겨지거나 UI 구성이 바뀔 수 있습니다.
     ensureManagerButton();
-    if(state.currentRoom){longTermNativeDisplayTick(state.currentRoom);void aiMemoryPoll(state.currentRoom);void longTermPoll(state.currentRoom);}
+    if(state.currentRoom){longTermNativeDisplayTick(state.currentRoom);void aiMemoryPoll(state.currentRoom);void longTermPoll(state.currentRoom);void comboAutoArmTick(state.currentRoom);}
   }
 
   function scheduleRouteTick(delay = (document.hidden ? APP.backgroundRoutePollMs : APP.routePollMs)) {
