@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.13
+// @version      0.17.30.14
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -34702,7 +34702,9 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
         const peer=area==='currentState'?'importantItems':area==='importantItems'?'currentState':'';
         const peerRow=peer&&aiMemoryConfig(room).areas[peer];
         const pairArea=peerRow?.enabled&&!peerRow.draft&&peerRow.failedEnd!==counts.lastKey&&aiMemoryReadyCount(room,peer,turns)>=peerRow.interval?peer:'';
-        await aiMemoryGenerate(room,area,pairArea?{pairArea}:{});
+        // 후추코어: 시작 전에 막히는 경우(다른 작업 중·저장 대기 등)도 화면에 이유를 보여 주고 다음 확인 때 다시 시도합니다.
+        try{await aiMemoryGenerate(room,area,pairArea?{pairArea}:{});}
+        catch(error){const current=aiMemoryConfig(room).areas[area];if(current&&!current.draft&&current.status!=='실패'){current.status='자동 실행 대기 · '+String(error?.message||error).slice(0,80);aiMemoryRefreshStatusUi(room);}console.warn('[후추코어] AI 기억정리 자동 실행 보류',area,error);}
         break;
       }
       aiMemoryRefreshStatusUi(room);
