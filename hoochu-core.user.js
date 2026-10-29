@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.17
+// @version      0.17.30.18
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -27802,8 +27802,11 @@ Existing REF must come from this packet. NEW REF are temporary, and a NEW_P pack
       for(const reason of ['deleted','missing','selected']){const entries=skipped.filter(entry=>policy.reason(entry)===reason);if(entries.length)summary.push(`${reason==='deleted'?'삭제 기록에 따라 제외':reason==='missing'?'현재 저장본에 없어 기본 제외':'사용자 선택으로 제외'} ${[...new Set(entries.map(entry=>entry.person))].join(', ')} · ${entries.length}개 결과 · 현재 저장본 유지`);}
     } else if (task === 'timeline') {
       const source = normalizeLineBreaks(String(values.result || '')).trim();
-      const fenced = source.match(/^```(?:text|txt|markdown|md|timeline)?[ \t]*\n([\s\S]*?)\n```[ \t]*$/i);
-      const raw = fenced ? fenced[1].trim() : source;
+      // 후추코어: 앞뒤 설명·코드블록이 섞여도 [TIMELINE_AUDIT]·[TIMELINE] 블록을 찾아서 씁니다.
+      const unfenced = source.replace(/^[ \t]*```[a-z]*[ \t]*$/gim, '').trim();
+      const auditBlock = unfenced.match(/\[TIMELINE_AUDIT\][\s\S]*?\[\/TIMELINE_AUDIT\]/i);
+      const timelineBlock = unfenced.match(/\[TIMELINE\][\s\S]*\[\/TIMELINE\]/i);
+      const raw = timelineBlock ? ((auditBlock ? auditBlock[0] + '\n' : '') + timelineBlock[0]).trim() : unfenced;
       const audit = raw.match(/^\[TIMELINE_AUDIT\][\s\S]*?\[\/TIMELINE_AUDIT\]/i);
       const timelineText = audit ? raw.slice(audit[0].length).trim() : raw;
       if (!/^\[TIMELINE\]/i.test(timelineText) || !/\[\/TIMELINE\]\s*$/i.test(timelineText)) throw new Error('전체 [TIMELINE] 결과가 필요합니다. 점검 보고만으로는 적용할 수 없습니다.');
@@ -34694,7 +34697,7 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
   function comboNotifyOnce(slot, text) { if (comboNotified.get(slot) === text) return; comboNotified.set(slot, text); try { notify(text, 'warn', 7000); } catch (_) {} }
 
   // 후추코어: 위시처럼 주기마다 직접 생성·반영하는 자동 실행기. '바로 실행'과 같은 경로를 써서 내부 대기 조건에 막히지 않게 합니다.
-  const comboMem = { busy:false, last:0 };
+  const comboMem = { busy:false, last:0, retried:new Set() };
   async function comboApplyDraft(room, area, draft) {
     try { if (await aiMemoryTryAutoApply(room, area, draft)) return true; } catch (_) {}
     const row = aiMemoryConfig(room).areas[area];
@@ -34717,6 +34720,8 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
         if (state.currentRoom !== room || !aiMemoryConfig(room).enabled) break;
         const row = aiMemoryConfig(room).areas[area]; if (!row.enabled) continue;
         if (row.draft) { if (row.autoApply) { try { if (await comboApplyDraft(room, area, row.draft)) break; } catch (error) { row.status = '자동 반영 보류 · 초안 검토'; row.autoApplyError = String(error?.message || error); comboNotifyOnce('apply:'+area, AI_MEMORY_AREAS[area].label + ' 자동 반영 보류 · ' + row.autoApplyError.slice(0, 100)); } } continue; }
+        // 형식만 어긋난 실패(점검 보고만 옴·마커 누락)는 같은 구간을 한 번 더 자동 재시도합니다.
+        if (/점검 보고만으로는|WISH_PERSON_V1|결과 JSON을 읽을 수 없습니다/.test(String(row.error || '')) && row.failedEnd === lastKey && !comboMem.retried.has(area + ':' + lastKey)) { comboMem.retried.add(area + ':' + lastKey); row.failedEnd = ''; }
         if (/원문·리롤·분기가 바뀌었습니다/.test(String(row.error || ''))) { row.error = ''; row.failedEnd = ''; if (row.status === '실패') row.status = '대기'; }
         let pending = 0; try { pending = aiMemoryPending(room, area, turns).count; } catch (error) { row.status = '시작점 확인 필요'; continue; }
         if (pending < row.interval) continue;
