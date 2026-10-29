@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.14
+// @version      0.17.30.15
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -20156,6 +20156,7 @@ ${dialogueText}`;
     } catch (error) {
       comboArm.last.set(id, { at:Date.now(), failedKey:key });
       console.warn('[후추코어] 자동 주입 보류:', error?.message || error);
+      comboNotifyOnce('arm:'+id, '자동 주입 보류 · ' + String(error?.message || error).slice(0, 120));
     } finally { comboArm.busy = false; }
   }
 
@@ -34673,6 +34674,47 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
       console.warn('[RP Manager Combo] 기본값 적용 보류:', error?.message || error);
     } finally { comboDefaultsBusy.delete(id); }
   }
+
+  // 후추코어: 같은 이유는 한 번만 알립니다.
+  const comboNotified = new Map();
+  function comboNotifyOnce(slot, text) { if (comboNotified.get(slot) === text) return; comboNotified.set(slot, text); try { notify(text, 'warn', 7000); } catch (_) {} }
+
+  // 후추코어: 위시처럼 주기마다 직접 생성·반영하는 자동 실행기. '바로 실행'과 같은 경로를 써서 내부 대기 조건에 막히지 않게 합니다.
+  const comboMem = { busy:false, last:0 };
+  async function comboApplyDraft(room, area, draft) {
+    try { if (await aiMemoryTryAutoApply(room, area, draft)) return true; } catch (_) {}
+    const row = aiMemoryConfig(room).areas[area];
+    if (!row?.autoApply || row.draft !== draft || state.currentRoom !== room) return false;
+    const prepared = aiMemoryPrepare(room, area, draft, draft.output);
+    await aiMemoryCommitDraft(room, area, draft, prepared, true);
+    row.autoApplyError = '';
+    aiMemoryRuntime.lastCounts.delete(String(room.chatId)); aiMemoryRefreshStatusUi(room);
+    return true;
+  }
+  async function comboAutoMemoryTick(room) {
+    if (!room || state.currentRoom !== room || comboMem.busy || aiMemoryRuntime.busy || document.hidden || areaResetPaused(room)) return;
+    const now = Date.now(); if (now - comboMem.last < 30000) return; comboMem.last = now;
+    const config = aiMemoryConfig(room); if (!config.enabled) return;
+    if (state.autoSaveTimers?.has?.(String(room.chatId)) || state.saveStatus === 'saving') return;
+    comboMem.busy = true;
+    try {
+      const turns = await aiMemoryPlanningTurns(room, false), lastKey = String(turns.at(-1)?.key || '');
+      for (const area of Object.keys(AI_MEMORY_AREAS)) {
+        if (state.currentRoom !== room || !aiMemoryConfig(room).enabled) break;
+        const row = aiMemoryConfig(room).areas[area]; if (!row.enabled) continue;
+        if (row.draft) { if (row.autoApply) { try { if (await comboApplyDraft(room, area, row.draft)) break; } catch (error) { row.status = '자동 반영 보류 · 초안 검토'; row.autoApplyError = String(error?.message || error); comboNotifyOnce('apply:'+area, AI_MEMORY_AREAS[area].label + ' 자동 반영 보류 · ' + row.autoApplyError.slice(0, 100)); } } continue; }
+        let pending = 0; try { pending = aiMemoryPending(room, area, turns).count; } catch (error) { row.status = '시작점 확인 필요'; continue; }
+        if (pending < row.interval) continue;
+        if (row.failedEnd && row.failedEnd === lastKey) continue; // 같은 마지막 턴에서 실패했으면 새 턴까지 대기
+        try { await aiMemoryGenerate(room, area, { force:true }); }
+        catch (error) { comboNotifyOnce('gen:'+area, AI_MEMORY_AREAS[area].label + ' 자동 정리 보류 · ' + String(error?.message || error).slice(0, 100)); break; }
+        const draft = aiMemoryConfig(room).areas[area].draft;
+        if (draft && aiMemoryConfig(room).areas[area].autoApply) { try { await comboApplyDraft(room, area, draft); } catch (error) { const r = aiMemoryConfig(room).areas[area]; r.status = '자동 반영 보류 · 초안 검토'; r.autoApplyError = String(error?.message || error); comboNotifyOnce('apply:'+area, AI_MEMORY_AREAS[area].label + ' 자동 반영 보류 · ' + r.autoApplyError.slice(0, 100)); } }
+        break; // 한 번에 한 항목씩
+      }
+    } catch (error) { console.warn('[후추코어] 자동 정리 확인 실패', error); }
+    finally { comboMem.busy = false; try { aiMemoryRefreshStatusUi(room); } catch (_) {} }
+  }
   async function aiMemoryPoll(room,force=false) {
     if(areaResetPaused(room))return;
     if(room&&!room.comboDefaultsV1)await comboApplyDefaults(room);
@@ -37902,7 +37944,7 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
     }
     // 연결되어 있어도 상단이 숨겨지거나 UI 구성이 바뀔 수 있습니다.
     ensureManagerButton();
-    if(state.currentRoom){longTermNativeDisplayTick(state.currentRoom);void aiMemoryPoll(state.currentRoom);void longTermPoll(state.currentRoom);void comboAutoArmTick(state.currentRoom);}
+    if(state.currentRoom){longTermNativeDisplayTick(state.currentRoom);void aiMemoryPoll(state.currentRoom);void longTermPoll(state.currentRoom);void comboAutoArmTick(state.currentRoom);void comboAutoMemoryTick(state.currentRoom);}
   }
 
   function scheduleRouteTick(delay = (document.hidden ? APP.backgroundRoutePollMs : APP.routePollMs)) {
