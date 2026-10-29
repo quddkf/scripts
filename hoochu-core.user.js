@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.7
+// @version      0.17.30.8
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -20706,13 +20706,14 @@ ${dialogueText}`;
     if (!root) return;
     const mobile = isMobileManagerLayout();
     if (root.classList.contains('rpcm-mobile-layout') !== mobile) root.classList.toggle('rpcm-mobile-layout', mobile);
-    if (!mobile) state.mobileViewportMaxHeight = 0;
+    const device = isMobileDevice();
+    if (!device) state.mobileViewportMaxHeight = 0;
     else if (height > state.mobileViewportMaxHeight) state.mobileViewportMaxHeight = height;
     if (root.style.getPropertyValue('--rpcm-vvh') !== `${height}px`) root.style.setProperty('--rpcm-vvh', `${height}px`);
     if (root.style.getPropertyValue('--rpcm-vv-top') !== `${top}px`) root.style.setProperty('--rpcm-vv-top', `${top}px`);
     const activeInput = document.activeElement;
     const typingFocus = !!activeInput?.matches?.('textarea,input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"])') && !!activeInput.closest?.('#rpcm-overlay,#rpcm-detached-backdrop,#rpcm-lib-dialog-backdrop,#rpcm-library-manager-backdrop,#rpcm-log-dialog-backdrop,#rpcm-story-dialog-backdrop,#rpcm-story-view-backdrop,#rpcm-dup-dialog-backdrop,#rpcm-import-backdrop,#rpcm-ai-backdrop');
-    const keyboardOpen = mobile && typingFocus && state.mobileViewportMaxHeight > 0 && height < state.mobileViewportMaxHeight * .82;
+    const keyboardOpen = device && typingFocus && state.mobileViewportMaxHeight > 0 && height < state.mobileViewportMaxHeight * .82;
     if (root.classList.contains('rpcm-mobile-keyboard-open') !== keyboardOpen) root.classList.toggle('rpcm-mobile-keyboard-open', keyboardOpen);
   }
 
@@ -37952,8 +37953,8 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
       // 후추코어: 폰 화면에서도 PC 레이아웃을 쓰되, 꽉 찬 화면·좁은 사이드바로 맞춥니다.
       GM_addStyle(`
 @media (max-width:680px){
-  html:not(.rpcm-mobile-layout) #rpcm-overlay{padding:0!important;align-items:stretch!important;justify-content:stretch!important}
-  html:not(.rpcm-mobile-layout) #rpcm-modal-wrap{position:fixed!important;inset:0!important;width:100vw!important;max-width:none!important;height:var(--rpcm-vvh,100dvh)!important;max-height:none!important;margin:0!important;transform:none!important;border-radius:0!important}
+  html:not(.rpcm-mobile-layout) #rpcm-overlay{padding:0!important;align-items:stretch!important;justify-content:stretch!important;inset:auto 0 auto 0!important;top:var(--rpcm-vv-top,0px)!important;height:var(--rpcm-vvh,100dvh)!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal-wrap{position:fixed!important;inset:auto 0 auto 0!important;top:var(--rpcm-vv-top,0px)!important;width:100vw!important;max-width:none!important;height:var(--rpcm-vvh,100dvh)!important;max-height:none!important;margin:0!important;transform:none!important;border-radius:0!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal{width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;border-radius:0!important;border:0!important;padding-top:env(safe-area-inset-top,0px)!important;padding-bottom:env(safe-area-inset-bottom,0px)!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-header{padding:8px 10px!important;gap:6px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-header .rpcm-title{font-size:17px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -37968,6 +37969,9 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content{padding:12px 12px 24px!important;min-width:0!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-footer{padding:8px 10px!important;flex-wrap:wrap!important;gap:6px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-footer-status{font-size:11px!important}
+  /* 키보드가 올라오면 화면에 보이는 영역에 맞추고 하단 버튼줄·상태줄은 잠시 숨깁니다. */
+  html.rpcm-mobile-keyboard-open:not(.rpcm-mobile-layout) #rpcm-modal :is(.rpcm-footer,.rpcm-global-status){display:none!important}
+  html.rpcm-mobile-keyboard-open:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-header{padding-top:4px!important;padding-bottom:4px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(.rpcm-overview,.rpcm-breakdown,[class*="-grid"],[class*="-cards"],[class*="overview"]){grid-template-columns:minmax(0,1fr)!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(.rpcm-overview,.rpcm-breakdown,[class*="-grid"],[class*="-cards"],[class*="overview"])>*{grid-column:auto!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}
