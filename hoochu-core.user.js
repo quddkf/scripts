@@ -1,13 +1,13 @@
 // ==UserScript==
-// @name         🪽위시 RP Manager
+// @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.2
-// @description  장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
+// @version      0.17.30.3
+// @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
 // @homepageURL  https://github.com/llljjj0601-cpu/rp-manager
-// @updateURL    https://raw.githubusercontent.com/quddkf/scripts/main/wish-rp-combo.user.js
-// @downloadURL  https://raw.githubusercontent.com/quddkf/scripts/main/wish-rp-combo.user.js
+// @updateURL    https://raw.githubusercontent.com/quddkf/scripts/main/hoochu-core.user.js
+// @downloadURL  https://raw.githubusercontent.com/quddkf/scripts/main/hoochu-core.user.js
 // @match        https://crack.wrtn.ai/stories/*/episodes/*
 // @match        https://crack.wrtn.ai/characters/*/chats/*
 // @match        https://crack.wrtn.ai/u/*/c/*
@@ -35,7 +35,7 @@
 // ==/UserScript==
 
 // ============================================================
-// 🪽위시 RP Manager
+// 🪽후추코어
 // 콤보 수정본 0.17.30.1: 원작자 허락 하에 개인 사용 목적으로 수정 — 위시식 자동 정리·관련 기억 자동 선택을 기본으로 켬.
 //
 // 개인 사용 목적으로만 배포합니다.
@@ -99,7 +99,7 @@
   window.__RP_MANAGER_0810_LOADED__ = true;
 
   const APP = {
-    name: '🪽위시 RP Manager',
+    name: '🪽후추코어',
     version: '0.17.30',
     dbName: 'RPContextManagerDB',
     dbVersion: 2,
@@ -12524,7 +12524,7 @@ ${dialogueText}`;
       : reason === 'empty' ? '활성 항목이 없어 종료됨'
       : '모든 유한 유지턴이 끝남';
     const suffix = detail ? ` · ${detail}` : '';
-    notify(`🪽위시 RP Manager 주입 종료 · ${reasonText}${suffix}`, reason === 'error' ? 'error' : 'success', 8000);
+    notify(`🪽후추코어 주입 종료 · ${reasonText}${suffix}`, reason === 'error' ? 'error' : 'success', 8000);
   }
 
   function loadModalPosition() {
@@ -14383,7 +14383,7 @@ ${dialogueText}`;
       state.autoSaveTimers.delete(key);
       if (rpcmHasActiveComposition()) { queueRoomAutoSave(room, 200); return; }
       try { await saveRoom(room); }
-      catch (e) { updateSaveStatusUi('error'); console.warn('[🪽위시 RP Manager] 자동저장 실패', e); }
+      catch (e) { updateSaveStatusUi('error'); console.warn('[🪽후추코어] 자동저장 실패', e); }
     }, delay);
     state.autoSaveTimers.set(key, timer);
   }
@@ -20520,7 +20520,7 @@ ${dialogueText}`;
       }
       if (n.parentElement?.closest('#rpcm-overlay,#rpcm-toast-wrap,#rpcm-notice-popups,#rpcm-lib-dialog-backdrop')) continue;
       const before = n.nodeValue || '';
-      // 🪽위시 RP Manager는 자기 마커가 포함된 흔적만 정리합니다.
+      // 🪽후추코어는 자기 마커가 포함된 흔적만 정리합니다.
       // 빈 <!----> 자체는 Crack/다른 확장이 사용할 수 있으므로 전역 삭제하지 않습니다.
       const beforeNorm = String(before || '');
       const after = /RP_CONTEXT_MANAGER(?:_START|_END)?/i.test(beforeNorm)
@@ -21605,7 +21605,7 @@ ${dialogueText}`;
       draftSaveTimer = setTimeout(() => {
         draftSaveTimer = 0;
         persistGeneratedDraft().catch(error => {
-          console.warn('[🪽위시 RP Manager] API 요약 결과 저장 실패', error);
+          console.warn('[🪽후추코어] API 요약 결과 저장 실패', error);
           setBusy(false, `미적용 결과 저장 실패 · ${error.message}`, 'error');
         });
       }, 450);
@@ -25035,7 +25035,7 @@ html.rpcm-mobile-layout #rpcm-modal #rpcm-section-overview .rpcm-maintenance-act
     state.fab.hidden = !visible;
     const armed = !!state.currentRoom?.pending;
     state.fab.classList.toggle('rpcm-armed', armed);
-    state.fab.title = armed ? `🪽위시 RP Manager · 자동 유지 중 (${pendingProgressText(state.currentRoom.pending)})` : '🪽위시 RP Manager';
+    state.fab.title = armed ? `🪽후추코어 · 자동 유지 중 (${pendingProgressText(state.currentRoom.pending)})` : '🪽후추코어';
     state.fab.setAttribute('aria-label', state.fab.title);
     if (managerMobileHost?.isConnected && isMobileManagerLayout()) {
       setImportantStyle(managerMobileHost, 'visibility', visible ? 'visible' : 'hidden');
@@ -37563,7 +37563,7 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
       readModalIntoRoom();
       updateSaveStatusUi('saving');
       await saveRoom(room);
-      notify('🪽위시 RP Manager 저장 완료', 'success');
+      notify('🪽후추코어 저장 완료', 'success');
       renderModalIfOpen();
     };
 
@@ -37684,7 +37684,7 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
       if (!f) return;
       try {
         const data = JSON.parse(await f.text());
-        if (!data?._rpContextManagerBackup || !Array.isArray(data.rooms)) throw new Error('🪽위시 RP Manager 백업 파일이 아닙니다.');
+        if (!data?._rpContextManagerBackup || !Array.isArray(data.rooms)) throw new Error('🪽후추코어 백업 파일이 아닙니다.');
         const [existingRooms, existingLibraries] = await Promise.all([getAllRooms(), getAllCharacterLibraries()]);
         const choice = await openBackupImportDialog(data, existingRooms, existingLibraries);
         if (!choice) return;
@@ -37745,7 +37745,7 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
 
     overlay.querySelector('#rpcm-reset').onclick = async () => {
       if (room.pending) { notify('먼저 임시 주입을 복원해 주세요.', 'warn'); return; }
-      if (!confirm('현재 채팅방의 🪽위시 RP Manager 데이터만 초기화할까요?')) return;
+      if (!confirm('현재 채팅방의 🪽후추코어 데이터만 초기화할까요?')) return;
       await clearCurrentRoom(room.chatId);
       await ensureCurrentRoom(apiChatIdOf(room), true);
       notify('현재 RP 데이터 초기화 완료', 'success');
@@ -37948,7 +37948,7 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
     } catch (e) {
       wishBoot.fail(e);
       console.error('[RP매니저] init failed', e);
-      notify(`🪽위시 RP Manager 초기화 실패: ${e.message}`, 'error', 7000);
+      notify(`🪽후추코어 초기화 실패: ${e.message}`, 'error', 7000);
     }
   }
 
