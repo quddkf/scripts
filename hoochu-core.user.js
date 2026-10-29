@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.9
+// @version      0.17.30.10
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -37955,7 +37955,7 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
 @media (max-width:680px){
   /* 뒤 배경은 화면 전체를 불투명하게 덮어서, 키보드가 올라와 창이 줄어도 크랙 화면이 비치지 않게 합니다. */
   html:not(.rpcm-mobile-layout) #rpcm-overlay{padding:0!important;align-items:stretch!important;justify-content:stretch!important;inset:0!important;height:auto!important;min-height:100lvh!important;background:var(--wish-bg)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-  html:not(.rpcm-mobile-layout) #rpcm-modal-wrap{position:fixed!important;inset:auto 0 auto 0!important;top:var(--rpcm-vv-top,0px)!important;width:100vw!important;max-width:none!important;height:var(--rpcm-vvh,100dvh)!important;max-height:none!important;margin:0!important;transform:none!important;border-radius:0!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal-wrap{position:fixed!important;inset:auto 0 auto 0!important;top:var(--rpcm-vv-top,0px)!important;width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;margin:0!important;transform:none!important;border-radius:0!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal{width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;border-radius:0!important;border:0!important;padding-top:env(safe-area-inset-top,0px)!important;padding-bottom:env(safe-area-inset-bottom,0px)!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-header{padding:8px 10px!important;gap:6px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-header .rpcm-title{font-size:17px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -37971,8 +37971,8 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-footer{padding:8px 10px!important;flex-wrap:wrap!important;gap:6px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-footer-status{font-size:11px!important}
   /* 위에 뜨는 설정창·대화상자도 키보드 위 보이는 영역에 맞춥니다. */
-  html:not(.rpcm-mobile-layout) :is([id^="rpcm-"][id$="-backdrop"],.rpcm-ltm-backdrop,#rpcm-full-rebuild-dialog,#rpcm-raw-viewer){inset:auto 0 auto 0!important;top:var(--rpcm-vv-top,0px)!important;height:var(--rpcm-vvh,100dvh)!important;max-height:var(--rpcm-vvh,100dvh)!important;box-sizing:border-box!important}
-  /* 키보드가 올라오면 화면에 보이는 영역에 맞추고 하단 버튼줄·상태줄은 잠시 숨깁니다. */
+  html:not(.rpcm-mobile-layout) :is([id^="rpcm-"][id$="-backdrop"],.rpcm-ltm-backdrop,#rpcm-full-rebuild-dialog,#rpcm-raw-viewer){inset:auto 0 auto 0!important;top:var(--rpcm-vv-top,0px)!important;height:100dvh!important;max-height:none!important;box-sizing:border-box!important}
+  /* 키보드가 올라와도 창 크기는 그대로 두고(키보드가 창 위를 덮음) 위치만 보이는 화면에 맞춥니다. 하단 버튼줄·상태줄은 잠시 숨깁니다. */
   html.rpcm-mobile-keyboard-open:not(.rpcm-mobile-layout) #rpcm-modal :is(.rpcm-footer,.rpcm-global-status){display:none!important}
   html.rpcm-mobile-keyboard-open:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-header{padding-top:4px!important;padding-bottom:4px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(.rpcm-overview,.rpcm-breakdown,[class*="-grid"],[class*="-cards"],[class*="overview"]){grid-template-columns:minmax(0,1fr)!important}
