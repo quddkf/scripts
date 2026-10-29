@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.15
+// @version      0.17.30.16
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -25981,7 +25981,7 @@ Existing REF must come from this packet. NEW REF are temporary, and a NEW_P pack
     room.aiMemorySourceAnchors||={};if(turn)room.aiMemorySourceAnchors[area]={key:String(turn.key),hash:aiMemoryAnchorFingerprint(turn),chatId:String(apiChatIdOf(room)),...(ignoreCheckpoint?{supersededCheckpoint:String(manualCheckpointForTask(room,AI_MEMORY_AREAS[area].manual).endMessageId||'')}:{})};else delete room.aiMemorySourceAnchors[area];
   }
   function aiMemoryCheckAnchorEvidence(room,areas,turns){
-    for(const area of areas){const record=room.aiMemorySourceAnchors?.[area],row=aiMemoryConfig(room).areas[area];if(!record||record.key!==String(row.cursor||row.baseline))continue;const turn=turns[rpcmFindTurnIndex(turns,record.key)];if(!turn||record.chatId!==String(apiChatIdOf(room))||record.hash!==aiMemoryAnchorFingerprint(turn)&&record.hash!==semanticSourceHash(JSON.stringify([record.key,turn.text,(turn.reviewSources||[]).map(row=>row.id)])))throw new Error(`${AI_MEMORY_AREAS[area].label}: 기준 RP의 원문·리롤·분기가 바뀌었습니다. 시작점을 다시 설정해 주세요.`);}
+    for(const area of areas){const record=room.aiMemorySourceAnchors?.[area],row=aiMemoryConfig(room).areas[area];if(!record||record.key!==String(row.cursor||row.baseline))continue;const turn=turns[rpcmFindTurnIndex(turns,record.key)];if(!turn||record.chatId!==String(apiChatIdOf(room)))throw new Error(`${AI_MEMORY_AREAS[area].label}: 기준 RP의 원문·리롤·분기가 바뀌었습니다. 시작점을 다시 설정해 주세요.`);if(record.hash!==aiMemoryAnchorFingerprint(turn)&&record.hash!==semanticSourceHash(JSON.stringify([record.key,turn.text,(turn.reviewSources||[]).map(row=>row.id)])))record.hash=aiMemoryAnchorFingerprint(turn);/* 후추코어: 같은 메시지가 응답교정·주입으로 글자만 바뀐 경우는 기준점을 새 원문으로 갱신 */}
   }
   async function aiMemoryScopedTurns(room,areas){
     const anchors=aiMemoryScopeAnchors(room,areas),needsBeginning=areas.some(area=>!aiMemoryConfig(room).areas[area].cursor&&!aiMemoryConfig(room).areas[area].baseline&&!manualCheckpointForTask(room,AI_MEMORY_AREAS[area].manual).endMessageId);
@@ -34703,6 +34703,7 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
         if (state.currentRoom !== room || !aiMemoryConfig(room).enabled) break;
         const row = aiMemoryConfig(room).areas[area]; if (!row.enabled) continue;
         if (row.draft) { if (row.autoApply) { try { if (await comboApplyDraft(room, area, row.draft)) break; } catch (error) { row.status = '자동 반영 보류 · 초안 검토'; row.autoApplyError = String(error?.message || error); comboNotifyOnce('apply:'+area, AI_MEMORY_AREAS[area].label + ' 자동 반영 보류 · ' + row.autoApplyError.slice(0, 100)); } } continue; }
+        if (/원문·리롤·분기가 바뀌었습니다/.test(String(row.error || ''))) { row.error = ''; row.failedEnd = ''; if (row.status === '실패') row.status = '대기'; }
         let pending = 0; try { pending = aiMemoryPending(room, area, turns).count; } catch (error) { row.status = '시작점 확인 필요'; continue; }
         if (pending < row.interval) continue;
         if (row.failedEnd && row.failedEnd === lastKey) continue; // 같은 마지막 턴에서 실패했으면 새 턴까지 대기
@@ -38048,7 +38049,9 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-footer{padding:8px 10px!important;flex-wrap:wrap!important;gap:6px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-footer-status{font-size:11px!important}
   /* 위에 뜨는 설정창·대화상자도 키보드 위 보이는 영역에 맞춥니다. */
-  html:not(.rpcm-mobile-layout) :is([id^="rpcm-"][id$="-backdrop"],.rpcm-ltm-backdrop,#rpcm-full-rebuild-dialog,#rpcm-raw-viewer):not(.rpcm-assistant-inline){inset:auto 0 auto 0!important;top:var(--rpcm-vv-top,0px)!important;height:max(100dvh,var(--rpcm-vvh-max,0px))!important;max-height:none!important;box-sizing:border-box!important}
+  html:not(.rpcm-mobile-layout) :is([id^="rpcm-"][id$="-backdrop"],.rpcm-ltm-backdrop,#rpcm-full-rebuild-dialog,#rpcm-raw-viewer):not(.rpcm-assistant-inline){inset:auto 0 auto 0!important;top:var(--rpcm-vv-top,0px)!important;height:var(--rpcm-vvh,100dvh)!important;max-height:var(--rpcm-vvh,100dvh)!important;box-sizing:border-box!important;overscroll-behavior:none!important;touch-action:pan-y}
+  html:not(.rpcm-mobile-layout) #rpcm-quick-backdrop .rpcm-quick-panel{height:auto!important;max-height:none!important;top:0!important;bottom:0!important}
+  html:not(.rpcm-mobile-layout) #rpcm-quick-backdrop .rpcm-quick-list{overscroll-behavior:contain!important;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
   /* 키보드가 올라와도 창 크기는 그대로 두고(키보드가 창 위를 덮음) 위치만 보이는 화면에 맞춥니다. 하단 버튼줄·상태줄은 잠시 숨깁니다. */
   html.rpcm-mobile-keyboard-open:not(.rpcm-mobile-layout) #rpcm-modal :is(.rpcm-footer,.rpcm-global-status){display:none!important}
   html.rpcm-mobile-keyboard-open:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-header{padding-top:4px!important;padding-bottom:4px!important}
