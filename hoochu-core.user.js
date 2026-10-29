@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.5
+// @version      0.17.30.6
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -24075,7 +24075,7 @@ html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content>*{max-width:948px;m
 #rpcm-modal :is(.rpcm-textarea,.rpcm-guide-textarea,.rpcm-person-import textarea,.rpcm-person-guide-panel textarea,.rpcm-knowledge-fields textarea){min-height:120px;resize:vertical}
 #rpcm-modal :is(.rpcm-pending,.rpcm-ai-chip,.rpcm-auto-badge,.rpcm-slot-remain,.rpcm-inline-story-diff){border-radius:8px}
 #rpcm-modal .rpcm-save-status.saved{color:var(--wish-success)!important}#rpcm-modal .rpcm-save-status.error{color:var(--wish-danger)!important}
-#rpcm-modal .rpcm-footer{box-shadow:0 -8px 24px -18px var(--wish-fg)!important}
+#rpcm-modal .rpcm-footer{box-shadow:none!important;border-top:1px solid var(--wish-line-2)!important}
 #rpcm-modal .rpcm-update-overview{margin:0 0 14px;padding:13px 15px;border:1px solid var(--wish-accent-line);border-radius:11px;background:var(--wish-card);box-shadow:var(--wish-shadow)}
 #rpcm-modal .rpcm-update-overview-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 #rpcm-modal .rpcm-update-overview-head>div{display:grid;gap:2px}#rpcm-modal .rpcm-update-overview-head strong{font-size:13.5px;color:var(--wish-fg)}#rpcm-modal .rpcm-update-overview-head span{font-size:11px;color:var(--wish-muted)}
@@ -32391,6 +32391,8 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
     indicator.style.height = vertical ? `${button.offsetHeight}px` : '';
     indicator.style.width = vertical ? '' : `${button.offsetWidth}px`;
     indicator.style.transform = vertical ? `translateY(${button.offsetTop}px)` : `translateX(${button.offsetLeft}px)`;
+    // 후추코어: 탭이 두 줄로 접혀도 선택 표시가 그 버튼 한 칸 높이만 덮게 합니다.
+    if (!vertical) { indicator.style.top = `${button.offsetTop}px`; indicator.style.bottom = 'auto'; indicator.style.height = `${button.offsetHeight}px`; }
   }
   function showAiWorkTab(overlay, tab, assistantOptions = null) {
     const key = ['assistant','tasks','context','folder'].includes(tab) ? tab : 'assistant';
@@ -32523,6 +32525,7 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
       if (!selected) continue;
       indicator.style.width = `${selected.offsetWidth}px`;
       indicator.style.transform = `translateX(${selected.offsetLeft}px)`;
+      indicator.style.top = `${selected.offsetTop}px`; indicator.style.bottom = 'auto'; indicator.style.height = `${selected.offsetHeight}px`;
     }
   }
   function rpcmInstallTabIndicator(overlay) {
@@ -37965,6 +37968,11 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(.rpcm-overview,.rpcm-breakdown,[class*="-grid"],[class*="-cards"],[class*="overview"]){grid-template-columns:minmax(0,1fr)!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(.rpcm-overview,.rpcm-breakdown,[class*="-grid"],[class*="-cards"],[class*="overview"])>*{grid-column:auto!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface *{white-space:normal!important;word-break:keep-all;text-align:center;line-height:1.2}
+  html:not(.rpcm-mobile-layout) #rpcm-modal{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface{width:64px!important;min-width:64px!important;max-width:64px!important;padding:6px 2px!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface :is(button,a){width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important;padding:7px 0!important;margin-left:0!important;margin-right:0!important;font-size:10.5px!important;letter-spacing:-.04em!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface :is(button,a) *{font-size:10.5px!important;max-width:100%!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface .rpcm-nav-indicator{left:3px!important;right:3px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-slot>summary{flex-wrap:wrap!important;row-gap:6px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-slot>summary .rpcm-slot-name{flex:1 1 auto!important;min-width:7em!important;white-space:nowrap!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-slot>summary .rpcm-inline-retention{flex:0 1 auto!important;min-width:0!important}
