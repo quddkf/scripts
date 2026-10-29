@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.6
+// @version      0.17.30.7
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -37959,20 +37959,35 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-header .rpcm-title{font-size:17px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-header .rpcm-iconbtn,html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-header-menu>summary{width:34px!important;height:34px!important;min-width:34px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-body{min-height:0!important;flex:1 1 auto!important}
-  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-workspace{height:100%!important;gap:0!important;padding:0!important}
-  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface{width:60px!important;min-width:60px!important;max-width:60px!important;padding:6px 4px!important;font-size:11px!important}
-  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface :is(button,a){padding-left:2px!important;padding-right:2px!important;font-size:11px!important;letter-spacing:-.02em}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-workspace{display:flex!important;flex-direction:column!important;height:100%!important;gap:0!important;padding:0!important;grid-template-columns:none!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content{flex:1 1 auto!important;min-height:0!important;width:100%!important;overflow-y:auto!important;overflow-x:hidden!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(div,section,article,header,label,p,span,details,summary,form,fieldset){min-width:0!important;max-width:100%!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(p,small,label,span,strong){overflow-wrap:anywhere}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(.rpcm-pref-row,[class*="-row"],[class*="-actions"],[class*="-toolbar"]){flex-wrap:wrap!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(input,select,textarea){max-width:100%!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content{padding:12px 12px 24px!important;min-width:0!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-footer{padding:8px 10px!important;flex-wrap:wrap!important;gap:6px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-footer-status{font-size:11px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(.rpcm-overview,.rpcm-breakdown,[class*="-grid"],[class*="-cards"],[class*="overview"]){grid-template-columns:minmax(0,1fr)!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(.rpcm-overview,.rpcm-breakdown,[class*="-grid"],[class*="-cards"],[class*="overview"])>*{grid-column:auto!important}
-  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface *{white-space:normal!important;word-break:keep-all;text-align:center;line-height:1.2}
   html:not(.rpcm-mobile-layout) #rpcm-modal{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}
-  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface{width:64px!important;min-width:64px!important;max-width:64px!important;padding:6px 2px!important}
-  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface :is(button,a){width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important;padding:7px 0!important;margin-left:0!important;margin-right:0!important;font-size:10.5px!important;letter-spacing:-.04em!important}
-  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface :is(button,a) *{font-size:10.5px!important;max-width:100%!important}
-  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface .rpcm-nav-indicator{left:3px!important;right:3px!important}
+  /* 후추코어: 폰에서는 왼쪽 메뉴를 위쪽 가로줄로 옮깁니다. */
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-workspace{display:flex!important;flex-direction:column!important;grid-template-columns:none!important;min-height:0!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-side-surface{position:static!important;flex:none!important;width:100%!important;min-width:0!important;max-width:none!important;height:auto!important;min-height:0!important;overflow:visible!important;padding:6px 6px!important;border-right:0!important;border-bottom:1px solid var(--wish-line-2)!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-nav{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:2px!important;width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none!important;padding:0!important;margin:0!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-nav::-webkit-scrollbar{display:none}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-nav .rpcm-nav-indicator{display:none!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-nav .rpcm-jump{flex:1 0 auto!important;width:auto!important;min-width:44px!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:6px 4px!important;border-radius:10px!important;font-size:11px!important;letter-spacing:-.03em!important;white-space:nowrap!important;line-height:1.25!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-nav .rpcm-jump *{font-size:11px!important;white-space:nowrap!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-nav .rpcm-jump:is(.is-active,[aria-current="page"]){background:var(--wish-accent-soft)!important;color:var(--wish-fg)!important;box-shadow:inset 0 -2px 0 var(--wish-accent)!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content{flex:1 1 auto!important;width:100%!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important}
+  /* 가로 스크롤 방지: 내용은 화면 폭 안에서 줄바꿈 */
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(section,article,header,details,summary,div,label,p,form,fieldset){max-width:100%!important;min-width:0!important;box-sizing:border-box}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(.rpcm-pref-row,.rpcm-pref-card>header,[data-ai-memory-area],[data-ai-memory-area]>div,.rpcm-section-head,.rpcm-tool-actions){flex-wrap:wrap!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-ai-memory-row{grid-template-columns:minmax(0,1fr) auto!important;gap:8px 10px!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-ai-memory-row>label:first-child{grid-column:1/-1!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-ai-memory-row>label{white-space:nowrap!important;min-width:0!important}
+  html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-work-content :is(input[type="text"],input[type="number"],select,textarea){max-width:100%!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-slot>summary{flex-wrap:wrap!important;row-gap:6px!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-slot>summary .rpcm-slot-name{flex:1 1 auto!important;min-width:7em!important;white-space:nowrap!important}
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-slot>summary .rpcm-inline-retention{flex:0 1 auto!important;min-width:0!important}
