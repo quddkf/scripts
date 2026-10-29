@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.4
+// @version      0.17.30.5
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -23969,16 +23969,15 @@ html body #rpcm-update-dialog-backdrop .rpcm-update-packet-options :is(strong,sm
   --wish-spring:cubic-bezier(.34,1.42,.5,1);--wish-ease:cubic-bezier(.2,.8,.3,1)
 }
 body[data-theme="dark"],html[data-rpcm-theme="dark"]{
-  --wish-bg:#FBF7EC;--wish-sheet:#FFFDF6;--wish-card:#FFFFFF;--wish-card-2:#F8F1DD;
-  --wish-line:#E4D9BC;--wish-line-2:#EFE7D0;--wish-fg:#1C1B17;--wish-fg-2:#3A3830;--wish-muted:#5B574C;
-  --wish-accent:#D9A21B;--wish-accent-hover:#C28F12;--wish-accent-strong:#8C6400;--wish-accent-ink:#1C1B17;
-  --wish-accent-soft:#FFF3C4;--wish-accent-soft-2:#FCE7A0;--wish-accent-line:#E3BF55;--wish-glow:#F5C842;
-  --wish-hi:rgba(245,200,66,.16);--wish-success:#2F6B47;--wish-warning:#8A5A00;--wish-danger:#A33A3A;
-  --wish-deep:var(--wish-card);--wish-deep-2:var(--wish-card-2);--wish-deep-line:var(--wish-line);--wish-deep-fg:var(--wish-fg);--wish-deep-muted:var(--wish-fg-2);
-  --wish-context-toast-bg:#FFF3C4;--wish-context-toast-fg:#3A3830;--wish-context-toast-mark:#D9A21B;
-  --wish-scrim:rgba(28,27,23,.30);--wish-shadow:0 1px 2px rgba(60,50,20,.05),0 12px 28px -20px rgba(60,50,20,.28);
-  --wish-lift:0 2px 5px rgba(60,50,20,.07),0 18px 34px -18px rgba(60,50,20,.32);--wish-shell-shadow:0 28px 68px -34px rgba(60,50,20,.36);
-  --wish-spring:cubic-bezier(.34,1.42,.5,1);--wish-ease:cubic-bezier(.2,.8,.3,1)
+  --wish-bg:#161512;--wish-sheet:#1E1C18;--wish-card:#24221D;--wish-card-2:#2C2923;
+  --wish-line:#423D32;--wish-line-2:#332F27;--wish-fg:#F4EFE2;--wish-fg-2:#D8D1C0;--wish-muted:#ABA493;
+  --wish-accent:#E6B325;--wish-accent-hover:#F0C23D;--wish-accent-strong:#F5C842;--wish-accent-ink:#1C1B17;
+  --wish-accent-soft:#3A3220;--wish-accent-soft-2:#4A3F22;--wish-accent-line:#7D6828;--wish-glow:#F5C842;
+  --wish-hi:rgba(245,200,66,.12);--wish-success:#7FC49C;--wish-warning:#E3B866;--wish-danger:#E88B8B;
+  --wish-deep:#24221D;--wish-deep-2:#2C2923;--wish-deep-line:#4E4839;--wish-deep-fg:#F4EFE2;--wish-deep-muted:#D8D1C0;
+  --wish-context-toast-bg:#F4EFE2;--wish-context-toast-fg:#1E1C18;--wish-context-toast-mark:#C9921A;
+  --wish-scrim:rgba(8,7,5,.50);--wish-shadow:0 1px 2px rgba(0,0,0,.26),0 12px 28px -20px rgba(0,0,0,.72);
+  --wish-lift:0 2px 6px rgba(0,0,0,.30),0 18px 36px -18px rgba(0,0,0,.78);--wish-shell-shadow:0 30px 72px -32px rgba(0,0,0,.84)
 }
 #rpcm-overlay,#rpcm-quick-backdrop,#rpcm-lore-dialog-backdrop,#rpcm-lore-copy-backdrop,#rpcm-update-dialog-backdrop,#rpcm-full-rebuild-dialog,#rpcm-issue-log-backdrop,
 #rpcm-lib-dialog-backdrop,#rpcm-library-manager-backdrop,#rpcm-log-dialog-backdrop,#rpcm-dup-dialog-backdrop,
@@ -37971,6 +37970,17 @@ reason은 각 항목에서 무엇을 줄이거나 합쳤는지와 그 이유를 
   html:not(.rpcm-mobile-layout) #rpcm-modal .rpcm-slot>summary .rpcm-inline-retention{flex:0 1 auto!important;min-width:0!important}
 }
 `);
+      // 후추코어: 화면 라벨 앞의 장식 이모지(🧭 📅 🧩 …)를 숨깁니다. 저장 데이터는 건드리지 않고 화면 글자만 바꿉니다.
+      GM_addStyle('.rpcm-nav-emoji{display:none!important}');
+      (()=>{
+        const LEAD=/^(\s*)(?:[\u{1F000}-\u{1FAFF}✨⭐⏰⌚☀-☄☎☔☕♻⚡⚽⛅⛪⛳⛵⛺⛽✅❌❓❗❤](?:️|‍|[\u{1F3FB}-\u{1F3FF}]|[\u{1F000}-\u{1FAFF}])*\s*)+/u;
+        const SKIP='textarea,input,select,[contenteditable],code,pre,.rpcm-read-preview,.rpcm-lore-full,.rpcm-lore-quote';
+        const inUi=node=>{const el=node.parentElement;return !!el&&!el.closest(SKIP)&&!!el.closest('[id^="rpcm"],[class*="rpcm"]');};
+        const clean=node=>{if(node.nodeType!==3||!LEAD.test(node.data)||!inUi(node))return;const next=node.data.replace(LEAD,'$1');if(next!==node.data)node.data=next;};
+        const sweep=root=>{if(root.nodeType===3){clean(root);return;}if(root.nodeType!==1)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);for(let n=w.nextNode();n;n=w.nextNode())clean(n);};
+        const start=()=>{if(!document.body)return setTimeout(start,50);sweep(document.body);new MutationObserver(list=>{for(const m of list){if(m.type==='characterData')clean(m.target);else for(const n of m.addedNodes)sweep(n);}}).observe(document.body,{childList:true,subtree:true,characterData:true});};
+        start();
+      })();
       console.log(`[위시RPManager] ${APP.name} v${APP.version} loaded`);
     } catch (e) {
       wishBoot.fail(e);
