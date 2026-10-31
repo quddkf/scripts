@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.19
+// @version      0.17.30.20
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -30116,6 +30116,14 @@ RP 원문과 사용자 확정 메모를 사실 근거로 삼는다. Crack의 미
     return cards;
   }
   function longTermValidateCard(card) {
+    // 후추코어: 자동 생성(JSON) 경로로 들어온 카드도 제목 대괄호·길이·본문을 먼저 맞춥니다.
+    if (card && typeof card === 'object') {
+      const rawTitle = String(card.title || '').trim().replace(/^\[+\s*/, '').replace(/\s*\]+$/, '');
+      const fixed = comboNormalizeLongTerm(`[${rawTitle}]\n${String(card.summary || '')}`);
+      const m = String(fixed).match(/^\[([^\]\n]+)\]\n([\s\S]*)$/);
+      if (m) { card.title = m[1]; card.summary = m[2].trim(); }
+      else card.title = rawTitle;
+    }
     const title = String(card.title || '').trim(), body = String(card.summary || '').trim();
     const fullTitle = `[${title}]`;
     if (!/^\[\d{2}\.\d{2}\|[^\]\n]+\]$/.test(fullTitle) || [...fullTitle].length > 20) throw new Error(`장기기억 제목 형식·20자 제한 위반: ${fullTitle}`);
