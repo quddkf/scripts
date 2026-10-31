@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🪽후추코어
 // @namespace    local.rp.context.manager
-// @version      0.17.30.18
+// @version      0.17.30.19
 // @description  [후추코어 · 위시 RP Manager 0.17.30 기반 콤보] 장기 RP용 현재상태·날짜로그·연속성 타임라인·캐릭터 설정을 관리하고, 검수형 AI 생성과 필요한 컨텍스트 자동 주입을 지원합니다.
 // @author       User
 // @license      All Rights Reserved
@@ -30027,7 +30027,7 @@ RP 원문과 사용자 확정 메모를 사실 근거로 삼는다. Crack의 미
 
   const longTermResultReports = new Map();
   function longTermInspectResult(text) {
-    const raw=String(text||'').replace(/\r\n?/g,'\n'),lines=raw.split('\n'),blocks=[],issues=[];let current=null,offset=0;
+    const raw=String(comboNormalizeLongTerm(text)||'').replace(/\r\n?/g,'\n'),lines=raw.split('\n'),blocks=[],issues=[];let current=null,offset=0;
     if(raw.length>600000)return {text:raw,blocks:[],issues:[{index:-1,title:'입력 크기',line:1,endLine:1,start:0,end:0,messages:['결과가 600,000자 안전 한도를 넘습니다. 파일과 작업 범위를 확인해 주세요.']}]};
     for(let i=0;i<lines.length;i++){
       const line=lines[i],trim=line.trim();
@@ -30047,7 +30047,7 @@ RP 원문과 사용자 확정 메모를 사실 근거로 삼는다. Crack의 미
       if(!/^\[\d{2}\.\d{2}\|[^\]\n]+\]$/.test(title))messages.push('제목은 [MM.DD|키워드] 형식이어야 합니다.');
       if([...title].length>20)messages.push('제목 '+[...title].length+'자 · 대괄호 포함 20자 이하로 줄여 주세요.');
       if(body.includes('\n'))messages.push('본문에 줄바꿈이 있습니다. 한 문단으로 합쳐 주세요.');
-      if(count<290||count>300)messages.push('본문 '+count+'자 · '+(count<290?(290-count)+'자 이상 추가':(count-300)+'자 이상 줄이기')+' (290~300자).');
+      if(count<150||count>300)messages.push('본문 '+count+'자 · '+(count<150?(150-count)+'자 이상 추가':(count-300)+'자 이상 줄이기')+' (150~300자).');
       if(/^(?:\d{2}[/.]\d{2}|\d{2}월\s*\d{1,2}일)/.test(body))messages.push('본문 첫머리에 반복된 제목 날짜를 제거해 주세요.');
       if(titles.get(block.title).length>1)messages.push('같은 제목이 '+titles.get(block.title).map(n=>(n+1)+'번').join('·')+' 블록에 중복됩니다.');
       if(messages.length)issues.push({...block,index,messages});
@@ -30065,8 +30065,42 @@ RP 원문과 사용자 확정 메모를 사실 근거로 삼는다. Crack의 미
     let host=section.querySelector('[data-ltm-validation-host]');if(!host){host=document.createElement('div');host.dataset.ltmValidationHost='';editor.insertAdjacentElement('afterend',host);}host.innerHTML=longTermResultReportHtml(report);return report;
   }
 
+  // 후추코어: AI 장기기억 결과의 사소한 형식 차이를 자동으로 맞춥니다.
+  // [[제목]]·**[제목]**·### [제목] → [제목], 20자 넘는 제목은 키워드를 줄이고, 본문 줄바꿈은 한 문단으로, 300자 초과는 문장 끝에서 자릅니다.
+  function comboNormalizeLongTerm(text) {
+    const src = String(text || '').replace(/\r\n?/g, '\n').replace(/^﻿/, '');
+    const titleRe = /^\s*(?:#+\s*)?(?:\*\*)?\s*\[{1,2}\s*(\d{2}\.\d{2}\s*\|[^\]\n]+?)\s*\]{1,2}\s*(?:\*\*)?\s*$/;
+    const lines = src.split('\n'); const head = []; const cards = []; let cur = null;
+    for (const line of lines) {
+      const t = line.trim();
+      if (/^```/.test(t)) continue;
+      const m = line.match(titleRe);
+      if (m) { cur = { title: m[1].replace(/\s*\|\s*/, '|').trim(), body: [] }; cards.push(cur); continue; }
+      if (!cur) { if (/^JOB_ID\s*=/.test(t)) head.push(t); continue; }
+      if (t) cur.body.push(t);
+    }
+    if (!cards.length) return src;
+    const fitTitle = title => {
+      if ([...title].length + 2 <= 20) return title;
+      const [date, kw = ''] = title.split('|'); let parts = kw.split('·').map(x => x.trim()).filter(Boolean);
+      while (parts.length > 1 && [...(date + '|' + parts.join('·'))].length + 2 > 20) parts.pop();
+      let out = date + '|' + parts.join('·');
+      while ([...out].length + 2 > 20) out = [...out].slice(0, -1).join('');
+      return out;
+    };
+    const fitBody = body => {
+      let b = body.join(' ').replace(/\s+/g, ' ').trim().replace(/^(?:\d{2}[/.]\d{2}|\d{2}월\s*\d{1,2}일)\s*[|·:,-]?\s*/, '');
+      const chars = [...b];
+      if (chars.length > 300) {
+        const cut = chars.slice(0, 300).join(''); const end = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('다.'), cut.lastIndexOf('.'), cut.lastIndexOf('요.'));
+        b = end >= 200 ? cut.slice(0, end + (cut[end] === '다' || cut[end] === '요' ? 2 : 1)).trim() : cut.trim();
+      }
+      return b;
+    };
+    return [...head, ...cards.map(c => `[${fitTitle(c.title)}]\n${fitBody(c.body)}`)].join('\n\n');
+  }
   function longTermParseCards(text) {
-    const raw = String(text || '').replace(/\r\n?/g, '\n').trim().replace(/^```[^\n]*\n/, '').replace(/\n```$/, '').trim();
+    const raw = String(comboNormalizeLongTerm(text) || '').replace(/\r\n?/g, '\n').trim().replace(/^```[^\n]*\n/, '').replace(/\n```$/, '').trim();
     if (!raw) throw new Error('장기기억 결과가 비어 있습니다.');
     const cards = []; let current = null;
     for (const line of raw.split('\n')) {
@@ -30085,7 +30119,7 @@ RP 원문과 사용자 확정 메모를 사실 근거로 삼는다. Crack의 미
     const title = String(card.title || '').trim(), body = String(card.summary || '').trim();
     const fullTitle = `[${title}]`;
     if (!/^\[\d{2}\.\d{2}\|[^\]\n]+\]$/.test(fullTitle) || [...fullTitle].length > 20) throw new Error(`장기기억 제목 형식·20자 제한 위반: ${fullTitle}`);
-    if (body.includes('\n') || [...body].length < 290 || [...body].length > 300) throw new Error(`${fullTitle} 본문은 한 문단 290~300자여야 합니다. (현재 ${[...body].length}자)`);
+    if (body.includes('\n') || [...body].length < 150 || [...body].length > 300) throw new Error(`${fullTitle} 본문은 한 문단 150~300자여야 합니다. (현재 ${[...body].length}자)`);
     if (/^(?:\d{2}[/.]\d{2}|\d{2}월\s*\d{1,2}일)/.test(body)) throw new Error(`${fullTitle} 본문 첫머리에 제목 날짜가 반복됩니다.`);
     return { title, summary:body };
   }
